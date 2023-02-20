@@ -18,6 +18,7 @@
 package org.openqa.selenium.remote.http.jdk;
 
 import com.google.auto.service.AutoService;
+
 import org.openqa.selenium.Credentials;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.UsernameAndPassword;
@@ -54,6 +55,8 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -64,7 +67,9 @@ import static java.net.http.HttpClient.Redirect.ALWAYS;
 public class JdkHttpClient implements HttpClient {
   public static final Logger LOG = Logger.getLogger(JdkHttpClient.class.getName());
   private final JdkHttpMessages messages;
-  private final java.net.http.HttpClient client;
+  private java.net.http.HttpClient client;
+  private WebSocket websocket;
+  private final ExecutorService executorService;
   private final Duration readTimeout;
 
   JdkHttpClient(ClientConfig config) {
@@ -73,14 +78,31 @@ public class JdkHttpClient implements HttpClient {
     this.messages = new JdkHttpMessages(config);
     this.readTimeout = config.readTimeout();
 
+    executorService = Executors.newCachedThreadPool();
+
     java.net.http.HttpClient.Builder builder = java.net.http.HttpClient.newBuilder()
       .connectTimeout(config.connectionTimeout())
-      .followRedirects(ALWAYS);
+      .followRedirects(ALWAYS)
+      .executor(executorService);
 
     Credentials credentials = config.credentials();
-    if (credentials != null) {
+    String info = config.baseUri().getUserInfo();
+    if (info != null && !info.trim().isEmpty()) {
+      String[] parts = info.split(":", 2);
+      String username = parts[0];
+      String password = parts.length > 1 ? parts[1] : null;
+
+      Authenticator authenticator = new Authenticator() {
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+          return new PasswordAuthentication(username, password.toCharArray());
+        }
+      };
+      builder = builder.authenticator(authenticator);
+    } else if (credentials != null) {
       if (!(credentials instanceof UsernameAndPassword)) {
-        throw new IllegalArgumentException("Credentials must be a user name and password: " + credentials);
+        throw new IllegalArgumentException(
+          "Credentials must be a user name and password: " + credentials);
       }
       UsernameAndPassword uap = (UsernameAndPassword) credentials;
       Authenticator authenticator = new Authenticator() {
@@ -181,7 +203,7 @@ public class JdkHttpClient implements HttpClient {
 
     java.net.http.WebSocket underlyingSocket = webSocketCompletableFuture.join();
 
-    return new WebSocket() {
+    this.websocket = new WebSocket() {
       @Override
       public WebSocket send(Message message) {
         Supplier<CompletableFuture<java.net.http.WebSocket>> makeCall;
@@ -230,9 +252,14 @@ public class JdkHttpClient implements HttpClient {
       @Override
       public void close() {
         LOG.fine("Closing websocket");
-        underlyingSocket.sendClose(1000, "WebDriver closing socket");
+        synchronized (underlyingSocket) {
+          if (!underlyingSocket.isOutputClosed()) {
+            underlyingSocket.sendClose(1000, "WebDriver closing socket");
+          }
+        }
       }
     };
+    return this.websocket;
   }
 
   private URI getWebSocketUri(HttpRequest request) {
@@ -274,6 +301,15 @@ public class JdkHttpClient implements HttpClient {
       LOG.fine(String.format("Ending request %s in %sms", req, (System.currentTimeMillis() - start)));
     }
 
+  }
+
+  @Override
+  public void close() {
+    executorService.shutdownNow();
+    if (this.websocket != null) {
+      this.websocket.close();
+    }
+    this.client = null;
   }
 
   @AutoService(HttpClient.Factory.class)

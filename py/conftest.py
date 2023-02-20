@@ -83,7 +83,7 @@ def driver(request):
     # skip tests if not available on the platform
     _platform = platform.system()
     if driver_class == "Safari" and _platform != "Darwin":
-        pytest.skip("Safari tests can only rn on an Apple OS")
+        pytest.skip("Safari tests can only run on an Apple OS")
     if (driver_class == "Ie") and _platform != "Windows":
         pytest.skip("IE and EdgeHTML Tests can only run on Windows")
     if "WebKit" in driver_class and _platform != "Linux":
@@ -165,7 +165,10 @@ def get_options(driver_class, config):
         if not options:
             options = getattr(webdriver, f"{driver_class}Options")()
 
-        options.headless = headless
+        if driver_class == "Chrome" or driver_class == "Edge":
+            options.add_argument("--headless=new")
+        if driver_class == "Firefox":
+            options.add_argument("-headless")
     return options
 
 

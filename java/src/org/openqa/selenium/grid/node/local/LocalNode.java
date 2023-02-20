@@ -22,9 +22,11 @@ import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Arrays;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.ImmutableCapabilities;
 import org.openqa.selenium.MutableCapabilities;
@@ -62,6 +64,7 @@ import org.openqa.selenium.io.TemporaryFilesystem;
 import org.openqa.selenium.io.Zip;
 import org.openqa.selenium.json.Json;
 import org.openqa.selenium.remote.SessionId;
+import org.openqa.selenium.remote.http.HttpMethod;
 import org.openqa.selenium.remote.http.HttpRequest;
 import org.openqa.selenium.remote.http.HttpResponse;
 import org.openqa.selenium.remote.tracing.AttributeKey;
@@ -121,6 +124,7 @@ public class LocalNode extends Node {
   private final int maxSessionCount;
   private final int configuredSessionCount;
   private final boolean cdpEnabled;
+  private final String downloadsPath;
 
   private final boolean bidiEnabled;
   private final AtomicBoolean drainAfterSessions = new AtomicBoolean();
@@ -144,7 +148,8 @@ public class LocalNode extends Node {
     Duration sessionTimeout,
     Duration heartbeatPeriod,
     List<SessionSlot> factories,
-    Secret registrationSecret) {
+    Secret registrationSecret,
+    String downloadsPath) {
     super(tracer, new NodeId(UUID.randomUUID()), uri, registrationSecret);
 
     this.bus = Require.nonNull("Event bus", bus);
@@ -161,6 +166,7 @@ public class LocalNode extends Node {
     this.sessionCount.set(drainAfterSessionCount);
     this.cdpEnabled = cdpEnabled;
     this.bidiEnabled = bidiEnabled;
+    this.downloadsPath = Optional.ofNullable(downloadsPath).orElse("");
 
     this.healthCheck = healthCheck == null ?
                        () -> {
@@ -183,31 +189,7 @@ public class LocalNode extends Node {
     this.currentSessions = CacheBuilder.newBuilder()
       .expireAfterAccess(sessionTimeout)
       .ticker(ticker)
-      .removalListener((RemovalListener<SessionId, SessionSlot>) notification -> {
-        if (notification.getKey() != null && notification.getValue() != null) {
-          SessionSlot slot = notification.getValue();
-          SessionId id = notification.getKey();
-          if (notification.wasEvicted()) {
-            // Session is timing out, stopping it by sending a DELETE
-            LOG.log(Level.INFO, () -> String.format("Session id %s timed out, stopping...", id));
-            slot.execute(new HttpRequest(DELETE, "/session/" + id));
-          }
-          // Attempt to stop the session
-          slot.stop();
-          // Invalidate temp file system
-          this.tempFileSystems.invalidate(id);
-          // Decrement pending sessions if Node is draining
-          if (this.isDraining()) {
-            int done = pendingSessions.decrementAndGet();
-            if (done <= 0) {
-              LOG.info("Node draining complete!");
-              bus.fire(new NodeDrainComplete(this.getId()));
-            }
-          }
-        } else {
-          LOG.log(Debug.getDebugLogLevel(), "Received stop session notification with null values");
-        }
-      })
+      .removalListener(this::stopTimedOutSession)
       .build();
 
     ScheduledExecutorService sessionCleanupNodeService =
@@ -248,6 +230,36 @@ public class LocalNode extends Node {
 
     Runtime.getRuntime().addShutdownHook(new Thread(this::stopAllSessions));
     new JMXHelper().register(this);
+  }
+
+  private void stopTimedOutSession(RemovalNotification<SessionId, SessionSlot> notification) {
+    if (notification.getKey() != null && notification.getValue() != null) {
+      SessionSlot slot = notification.getValue();
+      SessionId id = notification.getKey();
+      if (notification.wasEvicted()) {
+        // Session is timing out, stopping it by sending a DELETE
+        LOG.log(Level.INFO, () -> String.format("Session id %s timed out, stopping...", id));
+        try {
+          slot.execute(new HttpRequest(DELETE, "/session/" + id));
+        } catch (Exception e) {
+          LOG.log(Level.WARNING, String.format("Exception while trying to stop session %s", id), e);
+        }
+      }
+      // Attempt to stop the session
+      slot.stop();
+      // Invalidate temp file system
+      this.tempFileSystems.invalidate(id);
+      // Decrement pending sessions if Node is draining
+      if (this.isDraining()) {
+        int done = pendingSessions.decrementAndGet();
+        if (done <= 0) {
+          LOG.info("Node draining complete!");
+          bus.fire(new NodeDrainComplete(this.getId()));
+        }
+      }
+    } else {
+      LOG.log(Debug.getDebugLogLevel(), "Received stop session notification with null values");
+    }
   }
 
   public static Builder builder(
@@ -462,6 +474,72 @@ public class LocalNode extends Node {
       stop(id);
     }
     return toReturn;
+  }
+
+  @Override
+  public HttpResponse downloadFile(HttpRequest req, SessionId id) {
+    // When the session is running in a Docker container, the download file command
+    // needs to be forwarded to the container as well.
+    SessionSlot slot = currentSessions.getIfPresent(id);
+    if (slot != null && slot.getSession() instanceof DockerSession) {
+      return executeWebDriverCommand(req);
+    }
+    if (this.downloadsPath.isEmpty()) {
+      String msg = "Please specify the path wherein the files downloaded using the browser "
+        + "would be available via the command line arg [--downloads-path] and restart the node";
+      throw new WebDriverException(msg);
+    }
+    File dir = new File(this.downloadsPath);
+    if (!dir.exists()) {
+      throw new WebDriverException(
+        String.format("Cannot locate downloads directory %s.", downloadsPath));
+    }
+    if (!dir.isDirectory()) {
+      throw new WebDriverException(String.format("Invalid directory: %s.", downloadsPath));
+    }
+    if (req.getMethod().equals(HttpMethod.GET)) {
+      //User wants to list files that can be downloaded
+      List<String> collected = Arrays.stream(
+        Optional.ofNullable(dir.listFiles()).orElse(new File[]{})
+      ).map(File::getName).collect(Collectors.toList());
+      ImmutableMap<String, Object> data = ImmutableMap.of("names", collected);
+      ImmutableMap<String, Map<String, Object>> result = ImmutableMap.of("value",data);
+      return new HttpResponse().setContent(asJson(result));
+    }
+
+    String raw = string(req);
+    if (raw.isEmpty()) {
+      throw new WebDriverException(
+        "Please specify file to download in payload as {\"name\": \"fileToDownload\"}");
+    }
+
+    Map<String, Object> incoming = JSON.toType(raw, Json.MAP_TYPE);
+    String filename = Optional.ofNullable(incoming.get("name"))
+      .map(Object::toString)
+      .orElseThrow(
+        () -> new WebDriverException(
+          "Please specify file to download in payload as {\"name\": \"fileToDownload\"}"));
+    try {
+      File[] allFiles = Optional.ofNullable(
+        dir.listFiles((dir1, name) -> name.equals(filename))
+      ).orElse(new File[]{});
+      if (allFiles.length == 0) {
+        throw new WebDriverException(
+          String.format("Cannot find file [%s] in directory %s.", filename, downloadsPath));
+      }
+      if (allFiles.length != 1) {
+        throw new WebDriverException(
+          String.format("Expected there to be only 1 file. There were: %s.", allFiles.length));
+      }
+      String content = Zip.zip(allFiles[0]);
+      ImmutableMap<String, Object> data = ImmutableMap.of(
+        "filename", filename,
+        "contents", content);
+      ImmutableMap<String, Map<String, Object>> result = ImmutableMap.of("value",data);
+      return new HttpResponse().setContent(asJson(result));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   @Override
@@ -694,6 +772,7 @@ public class LocalNode extends Node {
     private Duration sessionTimeout = Duration.ofSeconds(NodeOptions.DEFAULT_SESSION_TIMEOUT);
     private HealthCheck healthCheck;
     private Duration heartbeatPeriod = Duration.ofSeconds(NodeOptions.DEFAULT_HEARTBEAT_PERIOD);
+    private String downloadsPath = "";
 
     private Builder(
       Tracer tracer,
@@ -748,6 +827,11 @@ public class LocalNode extends Node {
       return this;
     }
 
+    public Builder downloadsPath(String path) {
+      this.downloadsPath = path;
+      return this;
+    }
+
     public LocalNode build() {
       return new LocalNode(
         tracer,
@@ -763,7 +847,8 @@ public class LocalNode extends Node {
         sessionTimeout,
         heartbeatPeriod,
         factories.build(),
-        registrationSecret);
+        registrationSecret,
+        downloadsPath);
     }
 
     public Advanced advanced() {
