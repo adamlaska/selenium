@@ -78,7 +78,7 @@ cffi==1.15.0 \
     # via
     #   -r py/requirements.txt
     #   cryptography
-cryptography==37.0.2 \
+cryptography==41.0.3 \
     --hash=sha256:093cb351031656d3ee2f4fa1be579a8c69c754cf874206be1d4cf3b542042804 \
     --hash=sha256:0cc20f655157d4cfc7bada909dc5cc228211b075ba8407c46467f63597c78178 \
     --hash=sha256:1b9362d34363f2c71b7853f6251219298124aa4cc2075ae2932e64c91a3e2717 \
