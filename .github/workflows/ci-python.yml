@@ -105,7 +105,7 @@ jobs:
         with:
           python-version: 3.7.10
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
       - name: Run unit tests
@@ -139,7 +139,7 @@ jobs:
         with:
           python-version: 3.7.10
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
       - name: Setup Chrome and ChromeDriver
@@ -182,7 +182,7 @@ jobs:
         with:
           python-version: 3.7.10
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
       - name: Setup Firefox and GeckoDriver
@@ -224,7 +224,7 @@ jobs:
         with:
           python-version: 3.7.10
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
       - name: Setup Firefox and GeckoDriver
