@@ -22,40 +22,35 @@ require_relative 'spec_helper'
 module Selenium
   module WebDriver
     module Support
-      describe Select do
-        let(:select) { Select.new(driver.find_element(name: 'selectomatic')) }
-        let(:multi_select) { Select.new(driver.find_element(id: 'multi')) }
-        let(:single_disabled) { Select.new(driver.find_element(name: 'single_disabled')) }
-        let(:multi_disabled) { Select.new(driver.find_element(name: 'multi_disabled')) }
+      describe Select, exclusive: {bidi: false, reason: 'Not yet implemented with BiDi'} do
+        let(:select) { described_class.new(driver.find_element(name: 'selectomatic')) }
+        let(:multi_select) { described_class.new(driver.find_element(id: 'multi')) }
+        let(:single_disabled) { described_class.new(driver.find_element(name: 'single_disabled')) }
+        let(:multi_disabled) { described_class.new(driver.find_element(name: 'multi_disabled')) }
 
         before { driver.navigate.to url_for('formPage.html') }
 
         describe '#initialize' do
           it 'raises exception if not a select element' do
-            expect { Select.new(driver.find_element(id: 'checky')) }.to raise_exception(ArgumentError)
-          end
-
-          it 'raises exception if select is not enabled' do
-            no_select = driver.find_element(name: 'no-select')
-            expect { Select.new(no_select) }.to raise_exception(Error::UnsupportedOperationError)
+            expect { described_class.new(driver.find_element(id: 'checky')) }.to raise_exception(ArgumentError)
           end
         end
 
         describe '#multiple?' do
           it 'detects multiple' do
-            select = Select.new(driver.find_element(id: 'multi'))
+            select = described_class.new(driver.find_element(id: 'multi'))
             expect(select).to be_multiple
           end
 
           it 'detects not multiple' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
             expect(select).not_to be_multiple
           end
         end
 
         describe '#options' do
           it 'lists all' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
             options = select.options
             expect(options.size).to eq 4
             expect(options).to include(driver.find_element(id: 'non_multi_option'))
@@ -64,12 +59,12 @@ module Selenium
 
         describe '#selected_options' do
           it 'finds one' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
             expect(select.selected_options).to eq([driver.find_element(id: 'non_multi_option')])
           end
 
           it 'finds two' do
-            select = Select.new(driver.find_element(id: 'multi'))
+            select = described_class.new(driver.find_element(id: 'multi'))
             expect(select.selected_options).to include(driver.find_element(css: 'option[value=eggs]'))
             expect(select.selected_options).to include(driver.find_element(css: 'option[value=sausages]'))
           end
@@ -77,14 +72,14 @@ module Selenium
 
         describe '#first_selected_option' do
           it 'when multiple selected' do
-            select = Select.new(driver.find_element(id: 'multi'))
+            select = described_class.new(driver.find_element(id: 'multi'))
             expect(select.first_selected_option).to eq(driver.find_element(css: 'option[value=eggs]'))
           end
         end
 
         describe '#select_by' do
           it 'invalid how raises exception' do
-            select = Select.new(driver.find_element(id: 'multi'))
+            select = described_class.new(driver.find_element(id: 'multi'))
             expect { select.select_by(:invalid, 'foo') }.to raise_exception(ArgumentError)
           end
 
@@ -114,7 +109,8 @@ module Selenium
                 expect(selected_options).to include(driver.find_element(css: 'option[value="onion gravy"]'))
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect {
                   multi_disabled.select_by(:text, 'Disabled')
                 }.to raise_exception(Error::UnsupportedOperationError)
@@ -142,7 +138,8 @@ module Selenium
                 expect(selected_options).to include(driver.find_element(css: 'option[value=ham]'))
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect { multi_disabled.select_by(:index, 1) }.to raise_exception(Error::UnsupportedOperationError)
               end
 
@@ -168,7 +165,8 @@ module Selenium
                 expect(selected_options).to include(driver.find_element(css: 'option[value=ham]'))
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect {
                   multi_disabled.select_by(:value, 'disabled')
                 }.to raise_exception(Error::UnsupportedOperationError)
@@ -202,7 +200,8 @@ module Selenium
                 expect(select.selected_options).to eq([expected_option])
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect {
                   single_disabled.select_by(:text, 'Disabled')
                 }.to raise_exception(Error::UnsupportedOperationError)
@@ -228,7 +227,8 @@ module Selenium
                 expect(selected_options).to eq([driver.find_element(css: 'option[value="two"]')])
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect { single_disabled.select_by(:index, 1) }.to raise_exception(Error::UnsupportedOperationError)
               end
 
@@ -252,7 +252,8 @@ module Selenium
                 expect(selected_options).to eq([driver.find_element(css: 'option[value="two"]')])
               end
 
-              it 'errors when option disabled' do
+              it 'errors when option disabled',
+                 exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
                 expect {
                   single_disabled.select_by(:value, 'disabled')
                 }.to raise_exception(Error::UnsupportedOperationError)
@@ -271,7 +272,7 @@ module Selenium
           end
 
           it 'raises exception if select not multiple' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
 
             expect { select.deselect_by(:text, 'foo') }.to raise_exception(Error::UnsupportedOperationError)
           end
@@ -345,19 +346,20 @@ module Selenium
 
         describe '#select_all' do
           it 'raises exception if select not multiple' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
 
             expect { select.select_all }.to raise_exception(Error::UnsupportedOperationError)
           end
 
-          it 'raises exception if select contains disabled options' do
-            select = Select.new(driver.find_element(name: 'multi_disabled'))
+          it 'raises exception if select contains disabled options',
+             exclude: {browser: :safari, reason: 'Safari raises no exception with disabled'} do
+            select = described_class.new(driver.find_element(name: 'multi_disabled'))
 
             expect { select.select_all }.to raise_exception(Error::UnsupportedOperationError)
           end
 
           it 'selects all options' do
-            multi_select = Select.new(driver.find_element(id: 'multi'))
+            multi_select = described_class.new(driver.find_element(id: 'multi'))
             multi_select.select_all
 
             selected_options = multi_select.selected_options
@@ -368,19 +370,19 @@ module Selenium
 
         describe '#deselect_all' do
           it 'raises exception if select not multiple' do
-            select = Select.new(driver.find_element(name: 'selectomatic'))
+            select = described_class.new(driver.find_element(name: 'selectomatic'))
 
             expect { select.deselect_all }.to raise_exception(Error::UnsupportedOperationError)
           end
 
           it 'does not error when select contains disabled options' do
-            select = Select.new(driver.find_element(name: 'multi_disabled'))
+            select = described_class.new(driver.find_element(name: 'multi_disabled'))
 
             expect { select.deselect_all }.not_to raise_exception
           end
 
           it 'deselects all options' do
-            multi_select = Select.new(driver.find_element(id: 'multi'))
+            multi_select = described_class.new(driver.find_element(id: 'multi'))
             multi_select.deselect_all
 
             expect(multi_select.selected_options).to be_empty

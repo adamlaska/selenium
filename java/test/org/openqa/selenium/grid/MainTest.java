@@ -19,13 +19,11 @@ package org.openqa.selenium.grid;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class MainTest {
 
@@ -39,23 +37,18 @@ class MainTest {
   }
 
   private PrintStream toPrintStream(ByteArrayOutputStream baos) {
-    try {
-      return new PrintStream(baos, true, StandardCharsets.UTF_8.name());
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return new PrintStream(baos, true, StandardCharsets.UTF_8);
   }
 
   @Test
   void shouldPrintAListOfCommandsWhenStartedWithoutOptions() {
-    new Main(toPrintStream(out), toPrintStream(err), new String[]{}).go();
+    new Main(toPrintStream(out), toPrintStream(err), new String[] {}).go();
     assertThat(out.toString()).contains("A list of all the commands available");
   }
 
   @Test
   void shouldPrintAListOfCommandsWhenStartedWithHelpOption() {
-    new Main(toPrintStream(out), toPrintStream(err), new String[]{"--help"}).go();
+    new Main(toPrintStream(out), toPrintStream(err), new String[] {"--help"}).go();
     assertThat(out.toString()).contains("A list of all the commands available");
   }
-
 }

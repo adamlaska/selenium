@@ -20,6 +20,7 @@ from os import path
 import pytest
 
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.options import PageLoadStrategy
 
 
 @pytest.fixture
@@ -112,22 +113,6 @@ def test_get_experimental_options(options):
     assert options.experimental_options["foo"] == "bar"
 
 
-def test_set_headless(options):
-    options.headless = True
-    assert "--headless" in options._arguments
-
-
-def test_unset_headless(options):
-    options._arguments = ["--headless"]
-    options.headless = False
-    assert "--headless" not in options._arguments
-
-
-def test_get_headless(options):
-    options._arguments = ["--headless"]
-    assert options.headless is True
-
-
 def test_creates_capabilities(options):
     options._arguments = ["foo"]
     options._binary_location = "/bar"
@@ -148,7 +133,7 @@ def test_starts_with_default_capabilities(options):
     from selenium.webdriver import DesiredCapabilities
 
     caps = DesiredCapabilities.CHROME.copy()
-    caps.update({"pageLoadStrategy": "normal"})
+    caps.update({"pageLoadStrategy": PageLoadStrategy.normal})
     assert options._caps == caps
 
 
@@ -162,8 +147,3 @@ def test_enables_chrome_mobile(options):
     options.enable_mobile()
     result_caps = options.to_capabilities()
     assert result_caps["goog:chromeOptions"]["androidPackage"] == "com.android.chrome"
-
-
-def test_set_w3c_false(options):
-    with pytest.warns(UserWarning):
-        options.add_experimental_option("w3c", False)

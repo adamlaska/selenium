@@ -1,6 +1,6 @@
-using System;
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
+using System;
 
 namespace OpenQA.Selenium
 {
@@ -69,6 +69,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Does not work")]
         public void ShouldSubmitAFormWithNameSubmit()
         {
             driver.Url = formsPage;
@@ -217,6 +218,9 @@ namespace OpenQA.Selenium
 
                 uploadElement.SendKeys(inputFile.FullName);
                 uploadElement.Submit();
+
+                // Explicitly wait next page to be loaded, Firefox is not handling elements submitting
+                WaitFor(() => driver.Url.EndsWith("resultPage.html"), "We are not redirected to the resultPage after submitting web element");
             }
 
             inputFile.Delete();
@@ -329,6 +333,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreTarget("net48", "Cannot create inline page with UrlBuilder")]
         public void CanSubmitFormWithSubmitButtonIdEqualToSubmit()
         {
             string blank = EnvironmentManager.Instance.UrlBuilder.CreateInlinePage(new InlinePage()
@@ -343,6 +348,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreTarget("net48", "Cannot create inline page with UrlBuilder")]
         public void CanSubmitFormWithSubmitButtonNameEqualToSubmit()
         {
             string blank = EnvironmentManager.Instance.UrlBuilder.CreateInlinePage(new InlinePage()

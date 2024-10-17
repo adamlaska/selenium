@@ -21,11 +21,8 @@ require_relative 'spec_helper'
 
 module Selenium
   module WebDriver
-    describe Window do
-      after do
-        sleep 1 if ENV['TRAVIS']
-        quit_driver
-      end
+    describe Window, exclusive: {bidi: false, reason: 'Not yet implemented with BiDi'} do
+      after(:all) { reset_driver! }
 
       let(:window) { driver.manage.window }
 
@@ -116,7 +113,7 @@ module Selenium
         expect(new_size.height).to be > old_size.height
       end
 
-      it 'can make window full screen' do
+      it 'can make window full screen', except: {browser: %i[chrome edge], headless: true} do
         window.size = old_size = Dimension.new(700, 700)
 
         window.full_screen
@@ -127,9 +124,12 @@ module Selenium
         expect(new_size.height).to be > old_size.height
       end
 
-      it 'can minimize the window' do
+      it 'can minimize the window', except: [{browser: %i[chrome edge], headless: true}],
+                                    flaky: {browser: :chrome, platform: %i[macosx linux], ci: :github} do
         window.minimize
-        expect(driver.execute_script('return document.hidden;')).to be true
+        expect {
+          wait.until { driver.execute_script('return document.hidden;') }
+        }.not_to raise_error
       end
     end
   end # WebDriver

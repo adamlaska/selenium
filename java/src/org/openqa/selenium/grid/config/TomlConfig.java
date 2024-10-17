@@ -19,38 +19,39 @@ package org.openqa.selenium.grid.config;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.openqa.selenium.internal.Require;
-
 import io.ous.jtoml.JToml;
 import io.ous.jtoml.ParseException;
 import io.ous.jtoml.Toml;
 import io.ous.jtoml.TomlTable;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
+import org.openqa.selenium.internal.Require;
 
 public class TomlConfig implements Config {
 
   private final Toml toml;
+  private static final Logger LOG = Logger.getLogger(TomlConfig.class.getName());
 
   public TomlConfig(Reader reader) {
     try {
       toml = JToml.parse(reader);
+      LOG.warning(
+          "Please use quotes to denote strings. Upcoming TOML parser will require this and unquoted"
+              + " strings will throw an error in the future");
     } catch (IOException e) {
       throw new ConfigException("Unable to read TOML.", e);
     } catch (ParseException e) {
       throw new ConfigException(
-        e.getCause() +
-        "\n Validate the config using https://www.toml-lint.com/. " +
-        "\n Refer to https://toml.io/en/ for TOML usage guidance. ");
+          e.getCause()
+              + "\n Validate the config using https://www.toml-lint.com/. "
+              + "\n Refer to https://toml.io/en/ for TOML usage guidance. ");
     }
   }
 
@@ -90,21 +91,24 @@ public class TomlConfig implements Config {
       // Case when an array of tables is used as config
       // https://toml.io/en/v1.0.0-rc.3#array-of-tables
       if (collection.stream().anyMatch(item -> item instanceof TomlTable)) {
-        List<String> toReturn = new ArrayList<>();
-        collection.stream()
-          .map(item -> (TomlTable)item)
-          .forEach(tomlTable -> tomlTable.toMap().entrySet().stream()
-            .map(entry -> String.format("%s=%s", entry.getKey(), entry.getValue()))
-            .sorted()
-            .forEach(toReturn::add));
-        return Optional.of(toReturn);
+        return Optional.of(
+            collection.stream()
+                .map(item -> (TomlTable) item)
+                .map(TomlTable::toMap)
+                .map(this::toEntryList)
+                .flatMap(Collection::stream)
+                .collect(ImmutableList.toImmutableList()));
       }
-      List<String> values = collection.stream()
-        .filter(item -> (!(item instanceof Collection)))
-        .map(String::valueOf)
-        .collect(ImmutableList.toImmutableList());
 
-      return Optional.of(values);
+      return Optional.of(
+          collection.stream()
+              .filter(item -> (!(item instanceof Collection)))
+              .map(String::valueOf)
+              .collect(ImmutableList.toImmutableList()));
+    }
+
+    if (value instanceof TomlTable) {
+      return Optional.of(toEntryList(((TomlTable) value).toMap()));
     }
 
     return Optional.of(ImmutableList.of(String.valueOf(value)));

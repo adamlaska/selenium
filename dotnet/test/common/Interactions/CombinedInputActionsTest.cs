@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
-using OpenQA.Selenium.Internal;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -53,6 +52,32 @@ namespace OpenQA.Selenium.Interactions
 
             IWebElement resultElement = driver.FindElement(By.Id("result"));
             Assert.AreEqual("cheddar", resultElement.Text, "Should have picked the third option only.");
+        }
+
+        [Test]
+        public void ShouldAllowSettingActivePointerWithKeyBoardActions()
+        {
+            driver.Url = loginPage;
+
+            IWebElement username = driver.FindElement(By.Id("username-field"));
+            IWebElement password = driver.FindElement(By.Id("password-field"));
+            IWebElement login = driver.FindElement(By.Id("login-form-submit"));
+
+            Actions actionProvider = new Actions(driver);
+            IAction loginAction = actionProvider
+            .SendKeys(username, "username")
+            .SendKeys(password, "password")
+            .SetActivePointer(PointerKind.Mouse, "test")
+            .MoveToElement(login)
+            .Click()
+            .Build();
+
+            loginAction.Perform();
+
+            IAlert alert = driver.SwitchTo().Alert();
+            Assert.AreEqual("You have successfully logged in.", alert.Text);
+
+            alert.Accept();
         }
 
         [Test]
@@ -203,22 +228,8 @@ namespace OpenQA.Selenium.Interactions
 
             WaitFor<IWebElement>(() => driver.FindElement(By.Id("pageX")), "Did not find element with ID pageX");
 
-            // This will fail for IE 9 or earlier. The correct code would look something like
-            // this:
-            // int x;
-            // int y;
-            // if (TestUtilities.IsInternetExplorer(driver) && !TestUtilities.IsIE10OrHigher(driver))
-            //{
-            //    x = int.Parse(driver.FindElement(By.Id("clientX")).Text);
-            //    y = int.Parse(driver.FindElement(By.Id("clientY")).Text);
-            //}
-            //else
-            //{
-            //    x = int.Parse(driver.FindElement(By.Id("pageX")).Text);
-            //    y = int.Parse(driver.FindElement(By.Id("pageY")).Text);
-            //}
-            int x = int.Parse(driver.FindElement(By.Id("pageX")).Text);
-            int y = int.Parse(driver.FindElement(By.Id("pageY")).Text);
+            int x = Convert.ToInt16(Math.Round(Convert.ToDouble(driver.FindElement(By.Id("pageX")).Text)));
+            int y = Convert.ToInt16(Math.Round(Convert.ToDouble(driver.FindElement(By.Id("pageY")).Text)));
 
             Assert.That(FuzzyPositionMatching(location.X + 20, location.Y + 10, string.Format("{0},{1}", x, y)), Is.True);
         }
@@ -286,6 +297,7 @@ namespace OpenQA.Selenium.Interactions
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedBeforeTest = true)]
         public void CombiningShiftAndClickResultsInANewWindow()
         {
@@ -304,7 +316,7 @@ namespace OpenQA.Selenium.Interactions
             Assert.AreEqual(originalTitle, driver.Title, "Should not have navigated away.");
 
             string originalHandle = driver.CurrentWindowHandle;
-            foreach(string newHandle in driver.WindowHandles)
+            foreach (string newHandle in driver.WindowHandles)
             {
                 if (newHandle != originalHandle)
                 {
@@ -317,6 +329,7 @@ namespace OpenQA.Selenium.Interactions
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void HoldingDownShiftKeyWhileClicking()
         {
             driver.Url = clickEventPage;

@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
-using OpenQA.Selenium.Remote;
+using System;
+using System.Collections.Generic;
 
 namespace OpenQA.Selenium
 {
@@ -172,7 +171,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
-        public void AlertShouldNotAllowAdditionalCommandsIfDimissed()
+        public void AlertShouldNotAllowAdditionalCommandsIfDismissed()
         {
             driver.Url = CreateAlertPage("cheese");
 
@@ -235,6 +234,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void SwitchingToMissingAlertInAClosedWindowThrows()
         {
             string blank = EnvironmentManager.Instance.UrlBuilder.CreateInlinePage(new InlinePage());
@@ -369,6 +369,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [IgnoreBrowser(Browser.Chrome, "Test with onLoad alert hangs Chrome.")]
         [IgnoreBrowser(Browser.Edge, "Test with onLoad alert hangs Edge.")]
         [IgnoreBrowser(Browser.Safari, "Safari driver does not allow commands in any window when an alert is active")]

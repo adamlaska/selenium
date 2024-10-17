@@ -1,6 +1,6 @@
-using System;
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
+using System;
 
 namespace OpenQA.Selenium
 {
@@ -130,6 +130,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedAfterTest = true)]
         public void ShouldOnlyFollowHrefOnce()
         {

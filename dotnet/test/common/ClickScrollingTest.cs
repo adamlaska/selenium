@@ -1,6 +1,6 @@
-using System;
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
+using System;
 using System.Drawing;
 
 namespace OpenQA.Selenium
@@ -73,6 +73,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Scroll bar gets in they way of clicking center element")]
         [IgnoreBrowser(Browser.Firefox, "https://github.com/mozilla/geckodriver/issues/2013")]
         public void ShouldBeAbleToClickOnAnElementPartiallyHiddenByOverflow()
         {
@@ -94,12 +95,13 @@ namespace OpenQA.Selenium
 
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "IE is scrolling Button2 to top of screen instead of bottom of screen as per spec")]
         [IgnoreBrowser(Browser.Firefox, "https://github.com/mozilla/geckodriver/issues/2013")]
         public void ShouldNotScrollIfAlreadyScrolledAndElementIsInView()
         {
             driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("scroll3.html");
             driver.FindElement(By.Id("button2")).Click();
-            long scrollTop = GetScrollTop();
+            double scrollTop = GetScrollTop();
             driver.FindElement(By.Id("button1")).Click();
             Assert.AreEqual(scrollTop, GetScrollTop());
         }
@@ -215,7 +217,7 @@ namespace OpenQA.Selenium
         public void ShouldNotScrollWhenGettingElementSize()
         {
             driver.Url = EnvironmentManager.Instance.UrlBuilder.WhereIs("scroll3.html");
-            long scrollTop = GetScrollTop();
+            double scrollTop = GetScrollTop();
             Size ignoredSize = driver.FindElement(By.Id("button1")).Size;
             Assert.AreEqual(scrollTop, GetScrollTop());
         }
@@ -235,6 +237,8 @@ namespace OpenQA.Selenium
         // Tests below here are not included in the Java test suite
         //------------------------------------------------------------------
         [Test]
+        [IgnoreBrowser(Browser.IE, "Clicking label is not changing checkbox")]
+        [IgnoreTarget("net48", "Cannot create inline page with UrlBuilder")]
         public void ShouldBeAbleToClickInlineTextElementWithChildElementAfterScrolling()
         {
             driver.Url = EnvironmentManager.Instance.UrlBuilder.CreateInlinePage(new InlinePage()
@@ -246,9 +250,9 @@ namespace OpenQA.Selenium
             Assert.IsFalse(checkbox.Selected, "Checkbox should not be selected after click");
         }
 
-        private long GetScrollTop()
+        private double GetScrollTop()
         {
-            return (long)((IJavaScriptExecutor)driver).ExecuteScript("return document.body.scrollTop;");
+            return double.Parse(((IJavaScriptExecutor)driver).ExecuteScript("return document.body.scrollTop;").ToString());
         }
 
         private Func<bool> TitleToBe(string desiredTitle)

@@ -34,6 +34,7 @@ from .exceptions import MoveTargetOutOfBoundsException
 from .exceptions import NoAlertPresentException
 from .exceptions import NoSuchAttributeException
 from .exceptions import NoSuchCookieException
+from .exceptions import NoSuchDriverException
 from .exceptions import NoSuchElementException
 from .exceptions import NoSuchFrameException
 from .exceptions import NoSuchShadowRootException
@@ -55,6 +56,7 @@ __all__ = [
     "NoSuchWindowException",
     "NoSuchElementException",
     "NoSuchAttributeException",
+    "NoSuchDriverException",
     "NoSuchShadowRootException",
     "StaleElementReferenceException",
     "InvalidElementStateException",
