@@ -27,11 +27,17 @@ namespace OpenQA.Selenium
     [Serializable]
     public class NoSuchElementException : NotFoundException
     {
+
+        /// <summary>
+        /// Link to the documentation for this error
+        /// </summary>
+        private static string supportUrl = baseSupportUrl + "#no-such-element-exception";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NoSuchElementException"/> class.
         /// </summary>
         public NoSuchElementException()
-            : base()
+            : base(GetMessage(""))
         {
         }
 
@@ -41,7 +47,7 @@ namespace OpenQA.Selenium
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         public NoSuchElementException(string message)
-            : base(message)
+            : base(GetMessage(message))
         {
         }
 
@@ -54,20 +60,18 @@ namespace OpenQA.Selenium
         /// <param name="innerException">The exception that is the cause of the current exception,
         /// or <see langword="null"/> if no inner exception is specified.</param>
         public NoSuchElementException(string message, Exception innerException)
-            : base(message, innerException)
+            : base(GetMessage(message), innerException)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NoSuchElementException"/> class with serialized data.
+        /// Add information about obtaining additional support from documentation to this exception.
         /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized
-        /// object data about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual
-        /// information about the source or destination.</param>
-        protected NoSuchElementException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
+        /// <param name="message">The original message for exception</param>
+        /// <returns>The final message for exception</returns>
+        protected static string GetMessage(string message)
         {
+            return message + "; " + supportMsg + supportUrl;
         }
     }
 }

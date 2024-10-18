@@ -17,9 +17,21 @@
 
 package org.openqa.selenium.edge;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.openqa.selenium.testing.drivers.Browser.EDGE;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.SessionNotCreatedException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chromium.ChromiumNetworkConditions;
@@ -27,20 +39,13 @@ import org.openqa.selenium.chromium.HasCasting;
 import org.openqa.selenium.chromium.HasCdp;
 import org.openqa.selenium.chromium.HasNetworkConditions;
 import org.openqa.selenium.chromium.HasPermissions;
+import org.openqa.selenium.net.PortProber;
 import org.openqa.selenium.remote.RemoteWebDriverBuilder;
 import org.openqa.selenium.remote.http.ClientConfig;
+import org.openqa.selenium.testing.Ignore;
 import org.openqa.selenium.testing.JupiterTestBase;
 import org.openqa.selenium.testing.NoDriverBeforeTest;
 import org.openqa.selenium.testing.drivers.WebDriverBuilder;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.Assumptions.assumeThat;
 
 class EdgeDriverFunctionalTest extends JupiterTestBase {
 
@@ -63,7 +68,22 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
     EdgeOptions options = new EdgeOptions();
     options.setImplicitWaitTimeout(Duration.ofMillis(1));
     localDriver = EdgeDriver.builder().oneOf(options).build();
-    assertThat(localDriver.manage().timeouts().getImplicitWaitTimeout()).isEqualTo(Duration.ofMillis(1));
+    assertThat(localDriver.manage().timeouts().getImplicitWaitTimeout())
+        .isEqualTo(Duration.ofMillis(1));
+  }
+
+  @Test
+  @NoDriverBeforeTest
+  public void driverOverridesDefaultClientConfig() {
+    assertThatThrownBy(
+            () -> {
+              ClientConfig clientConfig =
+                  ClientConfig.defaultConfig().readTimeout(Duration.ofSeconds(0));
+              localDriver =
+                  new EdgeDriver(
+                      EdgeDriverService.createDefaultService(), new EdgeOptions(), clientConfig);
+            })
+        .isInstanceOf(SessionNotCreatedException.class);
   }
 
   @Test
@@ -72,11 +92,12 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
     RemoteWebDriverBuilder builder = EdgeDriver.builder().config(clientConfig);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(builder::build)
-      .withMessage("ClientConfig instances do not work for Local Drivers");
+        .isThrownBy(builder::build)
+        .withMessage("ClientConfig instances do not work for Local Drivers");
   }
 
   @Test
+  @Ignore(value = EDGE, reason = "https://bugs.chromium.org/p/chromedriver/issues/detail?id=4350")
   void canSetPermission() {
     HasPermissions permissions = (HasPermissions) driver;
 
@@ -95,7 +116,7 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
   @NoDriverBeforeTest
   public void canSetPermissionHeadless() {
     EdgeOptions options = new EdgeOptions();
-    options.setHeadless(true);
+    options.addArguments("--headless=chrome");
 
     localDriver = new WebDriverBuilder().get(options);
     HasPermissions permissions = (HasPermissions) localDriver;
@@ -111,13 +132,17 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
     assertThat(checkPermission(localDriver, CLIPBOARD_WRITE)).isEqualTo("granted");
   }
 
-  public String checkPermission(WebDriver driver, String permission){
+  public String checkPermission(WebDriver driver, String permission) {
     @SuppressWarnings("unchecked")
-    Map<String, Object> result = (Map<String, Object>) ((JavascriptExecutor) driver).executeAsyncScript(
-      "callback = arguments[arguments.length - 1];"
-        + "callback(navigator.permissions.query({"
-        + "name: arguments[0]"
-        + "}));", permission);
+    Map<String, Object> result =
+        (Map<String, Object>)
+            ((JavascriptExecutor) driver)
+                .executeAsyncScript(
+                    "callback = arguments[arguments.length - 1];"
+                        + "callback(navigator.permissions.query({"
+                        + "name: arguments[0]"
+                        + "}));",
+                    permission);
     return result.get("state").toString();
   }
 
@@ -131,7 +156,7 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
     List<Map<String, String>> castSinks = caster.getCastSinks();
 
     // Can not call these commands if there are no sinks available
-    if (castSinks.size() > 0) {
+    if (!castSinks.isEmpty()) {
       String deviceName = castSinks.get(0).get("name");
 
       caster.startTabMirroring(deviceName);
@@ -168,6 +193,24 @@ class EdgeDriverFunctionalTest extends JupiterTestBase {
     Map<String, Object> parameters = Map.of("url", pages.simpleTestPage);
     cdp.executeCdpCommand("Page.navigate", parameters);
 
+    assertThat(driver.getTitle()).isEqualTo("Hello WebDriver");
+  }
+
+  @Test
+  @NoDriverBeforeTest
+  void shouldLaunchSuccessfullyWithArabicDate() {
+    Locale arabicLocale = new Locale("ar", "EG");
+    Locale.setDefault(arabicLocale);
+    Locale.setDefault(Locale.US);
+
+    int port = PortProber.findFreePort();
+    EdgeDriverService.Builder builder = new EdgeDriverService.Builder();
+    builder.usingPort(port);
+    EdgeDriverService service = builder.build();
+
+    driver = new EdgeDriver(service, (EdgeOptions) EDGE.getCapabilities());
+
+    driver.get(pages.simpleTestPage);
     assertThat(driver.getTitle()).isEqualTo("Hello WebDriver");
   }
 }

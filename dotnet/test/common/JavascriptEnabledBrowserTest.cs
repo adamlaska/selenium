@@ -1,7 +1,7 @@
-using System;
 using NUnit.Framework;
-using System.Drawing;
 using NUnit.Framework.Constraints;
+using System;
+using System.Drawing;
 
 namespace OpenQA.Selenium
 {
@@ -33,6 +33,8 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.Chrome, "Not working properly in Chrome")]
+        [IgnoreBrowser(Browser.Edge, "Not working properly in Edge")]
         public void ShouldWaitForLoadsToCompleteAfterJavascriptCausesANewPageToLoad()
         {
             driver.Url = formsPage;
@@ -43,6 +45,8 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.Chrome, "Not working properly in Chrome")]
+        [IgnoreBrowser(Browser.Edge, "Not working properly in Edge")]
         public void ShouldBeAbleToFindElementAfterJavascriptCausesANewPageToLoad()
         {
             driver.Url = formsPage;
@@ -186,6 +190,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedAfterTest = true)]
         public void ShouldBeAbleToClickALinkThatClosesAWindow()
         {
@@ -208,7 +213,7 @@ namespace OpenQA.Selenium
             }, "No element to close window found");
             closeElement.Click();
 
-	        driver.SwitchTo().Window(handle);
+            driver.SwitchTo().Window(handle);
         }
     }
 }

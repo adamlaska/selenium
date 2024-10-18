@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using OpenQA.Selenium.Environment;
+using System;
+using System.Collections.Generic;
 
 namespace OpenQA.Selenium.Support.UI
 {
@@ -32,13 +32,6 @@ namespace OpenQA.Selenium.Support.UI
         {
             IWebElement element = driver.FindElement(By.Name("checky"));
             Assert.Throws<UnexpectedTagNameException>(() => { SelectElement elementWrapper = new SelectElement(element); });
-        }
-
-        [Test]
-        public void ShouldThrowAnExceptionIfTheElementIsNotEnabled()
-        {
-            IWebElement element = driver.FindElement(By.Name("no-select"));
-            Assert.Throws<InvalidOperationException>(() => { SelectElement elementWrapper = new SelectElement(element); });
         }
 
         [Test]
@@ -188,6 +181,7 @@ namespace OpenQA.Selenium.Support.UI
         }
 
         [Test]
+        [IgnoreBrowser(Browser.Firefox, "Not working in all bindings.")]
         public void ShouldNotAllowInvisibleOptionsToBeSelectedByVisibleText()
         {
             IWebElement element = driver.FindElement(By.Name("invisi_select"));
@@ -208,7 +202,7 @@ namespace OpenQA.Selenium.Support.UI
         {
             IWebElement element = driver.FindElement(By.Name("single_disabled"));
             SelectElement elementWrapper = new SelectElement(element);
-            Assert.Throws<NoSuchElementException>(() => elementWrapper.SelectByText("Disabled"));
+            Assert.Throws<InvalidOperationException>(() => elementWrapper.SelectByText("Disabled"));
         }
 
         [Test]
@@ -234,7 +228,7 @@ namespace OpenQA.Selenium.Support.UI
         {
             IWebElement element = driver.FindElement(By.Name("single_disabled"));
             SelectElement elementWrapper = new SelectElement(element);
-            Assert.Throws<NoSuchElementException>(() => elementWrapper.SelectByIndex(1));
+            Assert.Throws<InvalidOperationException>(() => elementWrapper.SelectByIndex(1));
         }
 
         [Test]
@@ -260,7 +254,7 @@ namespace OpenQA.Selenium.Support.UI
         {
             IWebElement element = driver.FindElement(By.Name("single_disabled"));
             SelectElement elementWrapper = new SelectElement(element);
-            Assert.Throws<NoSuchElementException>(() => elementWrapper.SelectByValue("disabled"));
+            Assert.Throws<InvalidOperationException>(() => elementWrapper.SelectByValue("disabled"));
         }
 
         [Test]
@@ -294,7 +288,7 @@ namespace OpenQA.Selenium.Support.UI
         }
 
         [Test]
-
+        [IgnoreBrowser(Browser.Firefox, "Not working in all bindings.")]
         public void ShouldNotAllowUserToDeselectOptionsByInvisibleText()
         {
             IWebElement element = driver.FindElement(By.Name("invisi_select"));

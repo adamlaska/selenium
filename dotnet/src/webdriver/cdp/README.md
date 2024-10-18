@@ -38,7 +38,8 @@ fi
 ```
 
 8. In each of the `*.cs` files in `//dotnet/test/common/DevTools/`, update all
-      occurrences of `V<N-1>` to `V<N>`.
+      occurrences of `V<N-2>` to `V<N-1>`. For now, due to issues with timeliness of CI tool
+      updates, we keep this one version behind the latest.
 9. Commit the changes.
 
 ### Removing support for a version of Chromium DevTools Protocol from the .NET bindings
@@ -51,9 +52,4 @@ perform the following steps, where `<N>` is the major version of the protocol:
 remove the entry for version `<N>` from the `SupportedDevToolsVersions` dictionary initialization.
 3. Remove the version string (`v<N>`) from the `SUPPORTED_DEVTOOLS_VERSIONS` list in
 [`//dotnet:selenium-dotnet-version.bzl`](https://github.com/SeleniumHQ/selenium/blob/trunk/dotnet/selenium-dotnet-version.bzl).
-4. In [`//dotnet/src/webdriver:WebDriver.csproj.prebuild.cmd`](https://github.com/SeleniumHQ/selenium/blob/trunk/dotnet/src/webdriver/WebDriver.csproj.prebuild.cmd),
-remove the `if not exist` block for version `<N>`.
-5. In [`//dotnet/src/webdriver:WebDriver.csproj.prebuild.sh`](https://github.com/SeleniumHQ/selenium/blob/trunk/dotnet/src/webdriver/WebDriver.csproj.prebuild.sh),
-remove the `if-fi` block for version `<N>`.
-6. Commit the changes.
-
+4. Commit the changes.

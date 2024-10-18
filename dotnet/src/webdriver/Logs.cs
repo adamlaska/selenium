@@ -30,7 +30,7 @@ namespace OpenQA.Selenium
         private WebDriver driver;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RemoteLogs"/> class.
+        /// Initializes a new instance of the <see cref="Logs"/> class.
         /// </summary>
         /// <param name="driver">Instance of the driver currently in use</param>
         public Logs(WebDriver driver)
@@ -76,28 +76,22 @@ namespace OpenQA.Selenium
         public ReadOnlyCollection<LogEntry> GetLog(string logKind)
         {
             List<LogEntry> entries = new List<LogEntry>();
-            try
-            {
-                Dictionary<string, object> parameters = new Dictionary<string, object>();
-                parameters.Add("type", logKind);
-                Response commandResponse = this.driver.InternalExecute(DriverCommand.GetLog, parameters);
 
-                object[] responseValue = commandResponse.Value as object[];
-                if (responseValue != null)
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            parameters.Add("type", logKind);
+            Response commandResponse = this.driver.InternalExecute(DriverCommand.GetLog, parameters);
+
+            object[] responseValue = commandResponse.Value as object[];
+            if (responseValue != null)
+            {
+                foreach (object rawEntry in responseValue)
                 {
-                    foreach (object rawEntry in responseValue)
+                    Dictionary<string, object> entryDictionary = rawEntry as Dictionary<string, object>;
+                    if (entryDictionary != null)
                     {
-                        Dictionary<string, object> entryDictionary = rawEntry as Dictionary<string, object>;
-                        if (entryDictionary != null)
-                        {
-                            entries.Add(LogEntry.FromDictionary(entryDictionary));
-                        }
+                        entries.Add(LogEntry.FromDictionary(entryDictionary));
                     }
                 }
-            }
-            catch (NotImplementedException)
-            {
-                // Swallow for backwards compatibility
             }
 
             return entries.AsReadOnly();

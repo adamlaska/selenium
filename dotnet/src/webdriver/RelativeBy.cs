@@ -16,12 +16,12 @@
 // limitations under the License.
 // </copyright>
 
+using OpenQA.Selenium.Internal;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
-using OpenQA.Selenium.Internal;
 
 namespace OpenQA.Selenium
 {
@@ -48,7 +48,7 @@ namespace OpenQA.Selenium
                 }
             }
 
-            wrappedAtom = string.Format(CultureInfo.InvariantCulture, "return ({0}).apply(null, arguments);", atom);
+            wrappedAtom = string.Format(CultureInfo.InvariantCulture, "/* findElements */return ({0}).apply(null, arguments);", atom);
         }
 
         private RelativeBy(object root) : this(root, null)

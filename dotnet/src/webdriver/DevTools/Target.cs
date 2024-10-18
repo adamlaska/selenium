@@ -33,6 +33,11 @@ namespace OpenQA.Selenium.DevTools
         public event EventHandler<TargetDetachedEventArgs> TargetDetached;
 
         /// <summary>
+        /// Occurs when a target is attached.
+        /// </summary>
+        public event EventHandler<TargetAttachedEventArgs> TargetAttached;
+
+        /// <summary>
         /// Asynchronously gets the targets available for this session.
         /// </summary>
         /// <returns>
@@ -40,7 +45,7 @@ namespace OpenQA.Selenium.DevTools
         /// contains the list of <see cref="TargetInfo"/> objects describing the
         /// targets available for this session.
         /// </returns>
-        public abstract Task<ReadOnlyCollection<TargetInfo>> GetTargets();
+        public abstract Task<ReadOnlyCollection<TargetInfo>> GetTargets(Object settings = null);
 
         /// <summary>
         /// Asynchronously attaches to a target.
@@ -68,6 +73,10 @@ namespace OpenQA.Selenium.DevTools
         /// <returns>A task that represents the asynchronous operation.</returns>
         public abstract Task SetAutoAttach();
 
+        internal abstract ICommand CreateSetAutoAttachCommand(bool waitForDebuggerOnStart);
+
+        internal abstract ICommand CreateDiscoverTargetsCommand();
+
         /// <summary>
         /// Raises the TargetDetached event.
         /// </summary>
@@ -77,6 +86,18 @@ namespace OpenQA.Selenium.DevTools
             if (this.TargetDetached != null)
             {
                 this.TargetDetached(this, e);
+            }
+        }
+
+        /// <summary>
+        /// Raises the TargetAttached event.
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnTargetAttached(TargetAttachedEventArgs e)
+        {
+            if (this.TargetAttached != null)
+            {
+                this.TargetAttached(this, e);
             }
         }
     }

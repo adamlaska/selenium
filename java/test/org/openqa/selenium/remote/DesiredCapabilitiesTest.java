@@ -17,21 +17,17 @@
 
 package org.openqa.selenium.remote;
 
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.logging.LoggingPreferences;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("UnitTests")
 class DesiredCapabilitiesTest {
@@ -81,17 +77,6 @@ class DesiredCapabilitiesTest {
   }
 
   @Test
-  void testExtractDebugLogLevelFromCapabilityMap() {
-    Map<String, Object> capabilitiesMap
-        = ImmutableMap.of(CapabilityType.LOGGING_PREFS, ImmutableMap.of("browser", "DEBUG"));
-
-    DesiredCapabilities caps = new DesiredCapabilities(capabilitiesMap);
-    LoggingPreferences prefs =
-        (LoggingPreferences) caps.getCapability(CapabilityType.LOGGING_PREFS);
-    assertThat(prefs.getLevel("browser")).isSameAs(Level.FINE);
-  }
-
-  @Test
   void shouldAutomaticallyConvertPlatformFromStringToEnum() {
     DesiredCapabilities caps = new DesiredCapabilities();
     caps.setCapability(CapabilityType.PLATFORM_NAME, "Windows Server 2008");
@@ -126,8 +111,8 @@ class DesiredCapabilitiesTest {
 
   @Test
   void shouldShortenLongEnclosedValues() {
-    Map<String, Object> capabilitiesMap
-        = ImmutableMap.of("key", ImmutableMap.of("subkey", createString(1025)));
+    Map<String, Object> capabilitiesMap =
+        ImmutableMap.of("key", ImmutableMap.of("subkey", createString(1025)));
 
     DesiredCapabilities caps = new DesiredCapabilities(capabilitiesMap);
     String expected = "{subkey: " + createString(27) + "..." + "}";
@@ -148,11 +133,6 @@ class DesiredCapabilitiesTest {
   }
 
   private String createString(int length) {
-    StringBuilder outputBuffer = new StringBuilder(length);
-    for (int i = 0; i < length; i++){
-      outputBuffer.append("x");
-    }
-    return outputBuffer.toString();
+    return "x".repeat(Math.max(0, length));
   }
-
 }

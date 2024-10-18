@@ -1,8 +1,8 @@
+using NUnit.Framework;
+using OpenQA.Selenium.Environment;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using System.Collections.ObjectModel;
-using OpenQA.Selenium.Environment;
 
 namespace OpenQA.Selenium
 {
@@ -10,6 +10,7 @@ namespace OpenQA.Selenium
     public class WindowSwitchingTest : DriverTestFixture
     {
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ShouldSwitchFocusToANewWindowWhenItIsOpenedAndNotStopFutureOperations()
         {
             driver.Url = xhtmlTestPage;
@@ -36,7 +37,8 @@ namespace OpenQA.Selenium
         }
 
         [Test]
-        public void ShouldThrowNoSuchWindowException() {
+        public void ShouldThrowNoSuchWindowException()
+        {
             driver.Url = xhtmlTestPage;
             String current = driver.CurrentWindowHandle;
             try
@@ -52,6 +54,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ShouldThrowNoSuchWindowExceptionOnAnAttemptToGetItsHandle()
         {
             driver.Url = (xhtmlTestPage);
@@ -83,6 +86,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ShouldThrowNoSuchWindowExceptionOnAnyOperationIfAWindowIsClosed()
         {
             driver.Url = (xhtmlTestPage);
@@ -127,6 +131,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ShouldThrowNoSuchWindowExceptionOnAnyElementOperationIfAWindowIsClosed()
         {
             driver.Url = (xhtmlTestPage);
@@ -159,6 +164,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedBeforeTest = true, IsCreatedAfterTest = true)]
         public void ShouldBeAbleToIterateOverAllOpenWindows()
         {
@@ -183,11 +189,9 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ClickingOnAButtonThatClosesAnOpenWindowDoesNotCauseTheBrowserToHang()
         {
-            bool isIEDriver = TestUtilities.IsInternetExplorer(driver);
-            bool isIE6 = TestUtilities.IsIE6(driver);
-
             driver.Url = xhtmlTestPage;
 
             String currentHandle = driver.CurrentWindowHandle;
@@ -200,12 +204,6 @@ namespace OpenQA.Selenium
             {
                 IWebElement closeElement = WaitFor(() => { return driver.FindElement(By.Id("close")); }, "Could not find element with id 'close'");
                 closeElement.Click();
-                if (isIEDriver && !isIE6)
-                {
-                    IAlert alert = WaitFor<IAlert>(AlertToBePresent(), "No alert found");
-                    alert.Accept();
-                }
-                // If we make it this far, we're all good.
             }
             finally
             {
@@ -215,6 +213,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void CanCallGetWindowHandlesAfterClosingAWindow()
         {
             bool isIEDriver = TestUtilities.IsInternetExplorer(driver);
@@ -278,6 +277,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedBeforeTest = true, IsCreatedAfterTest = true)]
         public void CanCloseWindowWhenMultipleWindowsAreOpen()
         {
@@ -301,6 +301,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedBeforeTest = true, IsCreatedAfterTest = true)]
         public void CanCloseWindowAndSwitchBackToMainWindow()
         {
@@ -318,7 +319,7 @@ namespace OpenQA.Selenium
             // There should be two windows. We should also see each of the window titles at least once.
             Assert.AreEqual(2, allWindowHandles.Count);
 
-           foreach(string handle in allWindowHandles)
+            foreach (string handle in allWindowHandles)
             {
                 if (handle != mainHandle)
                 {
@@ -344,6 +345,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedBeforeTest = true, IsCreatedAfterTest = true)]
         [IgnoreBrowser(Browser.Firefox, "https://github.com/mozilla/geckodriver/issues/610")]
         public void ShouldFocusOnTheTopMostFrameAfterSwitchingToAWindow()
@@ -369,6 +371,7 @@ namespace OpenQA.Selenium
         // Tests below here are not included in the Java test suite
         //------------------------------------------------------------------
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         public void ShouldGetBrowserHandles()
         {
             driver.Url = xhtmlTestPage;
@@ -397,6 +400,7 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.IE, "Edge in IE Mode does not properly handle multiple windows")]
         [NeedsFreshDriver(IsCreatedAfterTest = true)]
         public void CloseShouldCloseCurrentHandleOnly()
         {

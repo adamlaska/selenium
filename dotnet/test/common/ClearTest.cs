@@ -16,6 +16,8 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.Chrome, "https://bugs.chromium.org/p/chromedriver/issues/detail?id=4743")]
+        [IgnoreBrowser(Browser.Edge, "https://bugs.chromium.org/p/chromedriver/issues/detail?id=4743")]
         public void TextInputShouldNotClearWhenDisabled()
         {
             driver.Url = readOnlyPage;
@@ -42,6 +44,8 @@ namespace OpenQA.Selenium
         }
 
         [Test]
+        [IgnoreBrowser(Browser.Chrome, "https://bugs.chromium.org/p/chromedriver/issues/detail?id=4743")]
+        [IgnoreBrowser(Browser.Edge, "https://bugs.chromium.org/p/chromedriver/issues/detail?id=4743")]
         public void TextAreaShouldNotClearWhenDisabled()
         {
             driver.Url = readOnlyPage;
@@ -118,17 +122,6 @@ namespace OpenQA.Selenium
         public void ShouldBeAbleToClearRangeInput()
         {
             ShouldBeAbleToClearInput(By.Name("range_input"), "42", "50");
-        }
-
-        [Test]
-        [IgnoreBrowser(Browser.Chrome, "Driver sees checkbox as not editable")]
-        [IgnoreBrowser(Browser.Edge, "Driver sees checkbox as not editable")]
-        [IgnoreBrowser(Browser.Firefox, "Driver sees checkbox as not editable")]
-        [IgnoreBrowser(Browser.IE, "Driver sees checkbox as not editable")]
-        [IgnoreBrowser(Browser.Safari, "Driver sees checkbox as not editable")]
-        public void ShouldBeAbleToClearCheckboxInput()
-        {
-            ShouldBeAbleToClearInput(By.Name("checkbox_input"), "Checkbox");
         }
 
         [Test]

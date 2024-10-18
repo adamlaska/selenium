@@ -1,4 +1,4 @@
-﻿// <copyright file="LoadableComponentException.cs" company="WebDriver Committers">
+// <copyright file="LoadableComponentException.cs" company="WebDriver Committers">
 // Licensed to the Software Freedom Conservancy (SFC) under one
 // or more contributor license agreements. See the NOTICE file
 // distributed with this work for additional information
@@ -55,18 +55,6 @@ namespace OpenQA.Selenium.Support.UI
         /// or <see langword="null"/> if no inner exception is specified.</param>
         public LoadableComponentException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LoadableComponentException"/> class with serialized data.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized
-        /// object data about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual
-        /// information about the source or destination.</param>
-        protected LoadableComponentException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }

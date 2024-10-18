@@ -28,6 +28,16 @@ namespace OpenQA.Selenium
     public class WebDriverException : Exception
     {
         /// <summary>
+        /// Intro comment for pointing to documentation
+        /// </summary>
+        protected static string supportMsg = "For documentation on this error, please visit: ";
+
+        /// <summary>
+        /// Location of errors in documentation
+        /// </summary>
+        protected static string baseSupportUrl = "https://www.selenium.dev/documentation/webdriver/troubleshooting/errors";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="WebDriverException"/> class.
         /// </summary>
         public WebDriverException()
@@ -55,18 +65,6 @@ namespace OpenQA.Selenium
         /// or <see langword="null"/> if no inner exception is specified.</param>
         public WebDriverException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WebDriverException"/> class with serialized data.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized
-        /// object data about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual
-        /// information about the source or destination.</param>
-        protected WebDriverException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }

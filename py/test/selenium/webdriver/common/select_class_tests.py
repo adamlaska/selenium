@@ -48,6 +48,7 @@ def test_select_by_index_single(driver, pages):
             assert sel.first_selected_option.text == select["values"][x]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_index_single_disabled(driver, pages):
     pages.load("formPage.html")
     sel = Select(driver.find_element(By.NAME, disabledSingleSelect["name"]))
@@ -64,6 +65,7 @@ def test_select_by_value_single(driver, pages):
             assert sel.first_selected_option.text == select["values"][x]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_value_single_disabled(driver, pages):
     pages.load("formPage.html")
     sel = Select(driver.find_element(By.NAME, disabledSingleSelect["name"]))
@@ -82,6 +84,7 @@ def test_select_by_visible_text_single(driver, pages):
             assert sel.first_selected_option.text == select["values"][x]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_text_single_disabled(driver, pages):
     pages.load("formPage.html")
     sel = Select(driver.find_element(By.NAME, disabledSingleSelect["name"]))
@@ -103,6 +106,7 @@ def test_select_by_index_multiple(driver, pages):
                 assert selected[j].text == select["values"][j]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_index_multiple_disabled(driver, pages):
     pages.load("formPage.html")
 
@@ -125,6 +129,7 @@ def test_select_by_value_multiple(driver, pages):
                 assert selected[j].text == select["values"][j]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_value_multiple_disabled(driver, pages):
     pages.load("formPage.html")
 
@@ -147,6 +152,7 @@ def test_select_by_visible_text_multiple(driver, pages):
                 assert selected[j].text == select["values"][j]
 
 
+@pytest.mark.xfail_safari(reason="options incorrectly reported as enabled")
 def test_raises_exception_select_by_text_multiple_disabled(driver, pages):
     pages.load("formPage.html")
 
@@ -253,7 +259,7 @@ def test_get_options(driver, pages):
 
 def test_get_all_selected_options_single(driver, pages):
     pages.load("formPage.html")
-    for select in [singleSelectValues1, singleSelectValues2]:
+    for select in [singleSelectValues1, singleSelectValues2, disabledSelect]:
         opts = Select(driver.find_element(By.NAME, select["name"])).all_selected_options
         assert len(opts) == 1
         assert opts[0].text == select["values"][0]
@@ -288,12 +294,6 @@ def test_raises_exception_for_invalid_tag_name(driver, pages):
     pages.load("formPage.html")
     with pytest.raises(UnexpectedTagNameException):
         Select(driver.find_element(By.TAG_NAME, "div"))
-
-
-def test_raises_exception_for_disabled_element(driver, pages):
-    pages.load("formPage.html")
-    with pytest.raises(NotImplementedError):
-        Select(driver.find_element(By.NAME, disabledSelect["name"]))
 
 
 def test_deselect_by_index_non_existent(driver, pages):

@@ -16,6 +16,8 @@
 // limitations under the License.
 // </copyright>
 
+using OpenQA.Selenium.Interactions.Internal;
+using OpenQA.Selenium.Internal;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,11 +26,12 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using OpenQA.Selenium.Interactions.Internal;
-using OpenQA.Selenium.Internal;
 
 namespace OpenQA.Selenium
 {
+    /// <summary>
+    /// A base class representing an HTML element on a page.
+    /// </summary>
     public class WebElement : IWebElement, IFindsElement, IWrapsDriver, ILocatable, ITakesScreenshot, IWebDriverObjectReference
     {
         /// <summary>
@@ -107,7 +110,7 @@ namespace OpenQA.Selenium
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("id", this.elementId);
                 Response commandResponse = this.Execute(DriverCommand.IsElementEnabled, parameters);
-                return (bool)commandResponse.Value;
+                return (bool)Convert.ChangeType(commandResponse.Value, typeof(bool));
             }
         }
 
@@ -124,7 +127,7 @@ namespace OpenQA.Selenium
                 Dictionary<string, object> parameters = new Dictionary<string, object>();
                 parameters.Add("id", this.elementId);
                 Response commandResponse = this.Execute(DriverCommand.IsElementSelected, parameters);
-                return (bool)commandResponse.Value;
+                return (bool)Convert.ChangeType(commandResponse.Value, typeof(bool));
             }
         }
 
@@ -185,7 +188,7 @@ namespace OpenQA.Selenium
                 parameters.Add("args", new object[] { this.ToElementReference().ToDictionary() });
                 commandResponse = this.Execute(DriverCommand.ExecuteScript, parameters);
 
-                return (bool)commandResponse.Value;
+                return (bool)Convert.ChangeType(commandResponse.Value, typeof(bool));
             }
         }
 
@@ -261,7 +264,7 @@ namespace OpenQA.Selenium
         /// <remarks>This property is internal to the WebDriver instance, and is
         /// not intended to be used in your code. The element's ID has no meaning
         /// outside of internal WebDriver usage, so it would be improper to scope
-        /// it as public. However, both subclasses of <see cref="RemoteWebElement"/>
+        /// it as public. However, both subclasses of <see cref="WebElement"/>
         /// and the parent driver hosting the element have a need to access the
         /// internal element ID. Therefore, we have two properties returning the
         /// same value, one scoped as internal, the other as protected.</remarks>
@@ -620,7 +623,7 @@ namespace OpenQA.Selenium
             }
             else
             {
-                String script = "var form = arguments[0];\n" +
+                String script = "/* submitForm */var form = arguments[0];\n" +
                                 "while (form.nodeName != \"FORM\" && form.parentNode) {\n" +
                                 "  form = form.parentNode;\n" +
                                 "}\n" +
@@ -717,7 +720,8 @@ namespace OpenQA.Selenium
                 }
             }
 
-            string wrappedAtom = string.Format(CultureInfo.InvariantCulture, "return ({0}).apply(null, arguments);", atom);
+            string atomName = atomResourceName.Replace(".js", "");
+            string wrappedAtom = string.Format(CultureInfo.InvariantCulture, "/* {0} */return ({1}).apply(null, arguments);", atomName, atom);
             return wrappedAtom;
         }
 

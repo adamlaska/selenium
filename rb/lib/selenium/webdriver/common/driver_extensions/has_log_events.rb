@@ -64,7 +64,7 @@ module Selenium
           return if enabled
 
           devtools.runtime.enable
-          __send__("log_#{kind}_events")
+          __send__(:"log_#{kind}_events")
         end
 
         private
@@ -137,7 +137,6 @@ module Selenium
         def mutation_listener
           @mutation_listener ||= read_atom(:mutationListener)
         end
-
       end # HasLogEvents
     end # DriverExtensions
   end # WebDriver

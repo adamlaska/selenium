@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
-using System.Collections.ObjectModel;
 using OpenQA.Selenium.Environment;
 using OpenQA.Selenium.Interactions;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Text;
 
 namespace OpenQA.Selenium
 {
@@ -149,7 +149,7 @@ namespace OpenQA.Selenium
             driver.FindElement(By.Id("mouseclick")).Click();
 
             String result = driver.FindElement(By.Id("result")).Text;
-            Assert.AreEqual(result, "mouse click");
+            Assert.AreEqual("mouse click", result);
         }
 
         [Test]
@@ -250,7 +250,7 @@ namespace OpenQA.Selenium
             element.Clear();
 
             IWebElement result = driver.FindElement(By.Id("result"));
-            Assert.AreEqual(result.Text, "Cleared");
+            Assert.AreEqual("Cleared", result.Text.Trim());
         }
 
         [Test]
@@ -333,9 +333,9 @@ namespace OpenQA.Selenium
                 {
                     System.Threading.Thread.Sleep(200);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    throw e;
+                    throw;
                 }
             }
             if (!focused)

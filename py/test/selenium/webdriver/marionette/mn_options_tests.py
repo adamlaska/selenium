@@ -19,6 +19,7 @@ import pytest
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.options import PageLoadStrategy
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.options import Log
@@ -41,9 +42,9 @@ class TestUnit:
     def test_ctor(self):
         opts = Options()
         assert opts._binary is None
-        assert opts._preferences == {}
+        assert not opts._preferences
         assert opts._profile is None
-        assert opts._arguments == []
+        assert not opts._arguments
         assert isinstance(opts.log, Log)
 
     def test_binary(self):
@@ -98,7 +99,7 @@ class TestUnit:
     def test_to_capabilities(self):
         opts = Options()
         firefox_caps = DesiredCapabilities.FIREFOX.copy()
-        firefox_caps.update({"pageLoadStrategy": "normal"})
+        firefox_caps.update({"pageLoadStrategy": PageLoadStrategy.normal})
         assert opts.to_capabilities() == firefox_caps
 
         profile = FirefoxProfile()

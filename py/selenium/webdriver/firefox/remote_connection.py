@@ -20,11 +20,10 @@ from selenium.webdriver.remote.remote_connection import RemoteConnection
 
 
 class FirefoxRemoteConnection(RemoteConnection):
-
     browser_name = DesiredCapabilities.FIREFOX["browserName"]
 
-    def __init__(self, remote_server_addr, keep_alive=True, ignore_proxy=False):
-        super().__init__(remote_server_addr, keep_alive, ignore_proxy=ignore_proxy)
+    def __init__(self, remote_server_addr, keep_alive=True, ignore_proxy=False) -> None:
+        super().__init__(remote_server_addr, keep_alive, ignore_proxy)
 
         self._commands["GET_CONTEXT"] = ("GET", "/session/$sessionId/moz/context")
         self._commands["SET_CONTEXT"] = ("POST", "/session/$sessionId/moz/context")

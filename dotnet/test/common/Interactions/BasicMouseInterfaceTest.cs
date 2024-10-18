@@ -1,9 +1,7 @@
-using System;
 using NUnit.Framework;
-using System.Text.RegularExpressions;
-using System.Drawing;
-using OpenQA.Selenium.Internal;
 using OpenQA.Selenium.Environment;
+using System;
+using System.Drawing;
 
 namespace OpenQA.Selenium.Interactions
 {
@@ -18,6 +16,17 @@ namespace OpenQA.Selenium.Interactions
             {
                 actionExecutor.ResetInputState();
             }
+        }
+
+        [Test]
+        public void ShouldSetActivePointer()
+        {
+            Actions actionProvider = new Actions(driver);
+            actionProvider.SetActivePointer(PointerKind.Mouse, "test mouse");
+
+            PointerInputDevice device = actionProvider.GetActivePointer();
+
+            Assert.AreEqual("test mouse", device.DeviceName);
         }
 
         [Test]
@@ -132,6 +141,23 @@ namespace OpenQA.Selenium.Interactions
 
             contextClick.Perform();
             Assert.AreEqual("Clicked", toClick.GetAttribute("value"), "Value should change to Clicked.");
+        }
+
+        [Test]
+        [IgnoreBrowser(Browser.Chrome, "Not working properly in RBE, works locally with pinned browsers")]
+        [IgnoreBrowser(Browser.Edge, "Not working properly in RBE, works locally with pinned browsers")]
+        [IgnoreBrowser(Browser.Firefox, "Not working properly in RBE, works locally with pinned browsers")]
+        public void ShouldMoveToLocation()
+        {
+            driver.Url = mouseInteractionPage;
+
+            Actions actionProvider = new Actions(driver);
+            actionProvider.MoveToLocation(100, 200).Build().Perform();
+
+            IWebElement location = driver.FindElement(By.Id("absolute-location"));
+            var coordinates = location.Text.Split(',');
+            Assert.AreEqual("100", coordinates[0].Trim());
+            Assert.AreEqual("200", coordinates[1].Trim());
         }
 
         [Test]
@@ -315,7 +341,7 @@ namespace OpenQA.Selenium.Interactions
             IWebElement trackerDiv = driver.FindElement(By.Id("mousetracker"));
             Size size = trackerDiv.Size;
 
-            new Actions(driver).MoveToElement(trackerDiv, size.Width / 2, size.Height / 2).Perform();
+            new Actions(driver).MoveToElement(trackerDiv, -size.Width / 2, -size.Height / 2).Perform();
 
             IWebElement reporter = driver.FindElement(By.Id("status"));
 
@@ -392,8 +418,8 @@ namespace OpenQA.Selenium.Interactions
         private bool FuzzyPositionMatching(int expectedX, int expectedY, String locationTuple)
         {
             string[] splitString = locationTuple.Split(',');
-            int gotX = int.Parse(splitString[0].Trim());
-            int gotY = int.Parse(splitString[1].Trim());
+            int gotX = Convert.ToInt16(Math.Round(Convert.ToDouble(splitString[0].Trim())));
+            int gotY = Convert.ToInt16(Math.Round(Convert.ToDouble(splitString[1].Trim())));
 
             // Everything within 5 pixels range is OK
             const int ALLOWED_DEVIATION = 5;
@@ -443,6 +469,11 @@ namespace OpenQA.Selenium.Interactions
         private Func<bool> TitleToBe(string desiredTitle)
         {
             return () => driver.Title == desiredTitle;
+        }
+
+        private Func<bool> ValueToBe(IWebElement element, string desiredValue)
+        {
+            return () => element.GetDomProperty("value") == desiredValue;
         }
 
         private Func<bool> ElementTextToEqual(IWebElement element, string text)

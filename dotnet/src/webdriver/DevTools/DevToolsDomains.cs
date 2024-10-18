@@ -18,8 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace OpenQA.Selenium.DevTools
 {
@@ -37,9 +35,9 @@ namespace OpenQA.Selenium.DevTools
         // added to this dictionary.
         private static readonly Dictionary<int, Type> SupportedDevToolsVersions = new Dictionary<int, Type>()
         {
-            { 106, typeof(V106.V106Domains) },
-            { 105, typeof(V105.V105Domains) },
-            { 104, typeof(V104.V104Domains) },
+            { 127, typeof(V127.V127Domains) },
+            { 129, typeof(V129.V129Domains) },
+            { 128, typeof(V128.V128Domains) },
             { 85, typeof(V85.V85Domains) }
         };
 
@@ -127,8 +125,7 @@ namespace OpenQA.Selenium.DevTools
                 }
             }
 
-            // TODO: Return a no-op implementation or throw exception.
-            return null;
+            throw new WebDriverException($"DevTools version is not in the supported range. Desired version={desiredVersion}, range={versionRange}. Supported versions: {string.Join(", ", supportedVersions)}");
         }
     }
 }
